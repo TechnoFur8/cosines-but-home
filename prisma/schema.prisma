@@ -1,0 +1,136 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id    Int    @id @default(autoincrement())
+    email String @unique
+    name  String
+
+    cart     Cart?
+    favorite Favorite?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Cart {
+    id Int @id @default(autoincrement())
+
+    sessionId String @unique
+
+    user   User? @relation(fields: [userId], references: [id])
+    userId Int?  @unique
+
+    cartProducts CartProduct[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Favorite {
+    id Int @id @default(autoincrement())
+
+    sessionId String @unique
+
+    user   User? @relation(fields: [userId], references: [id])
+    userId Int?  @unique
+
+    favoriteProducts FavoriteProduct[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model CartProduct {
+    id Int @id @default(autoincrement())
+
+    img       String
+    name      String
+    quantity  Int    @default(1)
+    price     Int
+    discount  Int
+    size      String
+    productId Int
+
+    cart   Cart @relation(fields: [cartId], references: [id])
+    cartId Int
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model FavoriteProduct {
+    id Int @id @default(autoincrement())
+
+    img       String
+    name      String
+    price     Int
+    discount  Int
+    size      String
+    productId Int
+
+    favorite   Favorite @relation(fields: [favoriteId], references: [id])
+    favoriteId Int
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Product {
+    id Int @id @default(autoincrement())
+
+    img         String[]
+    name        String
+    price       Int
+    discount    Int
+    compound    String
+    warp        String
+    hight       Int
+    hardness    Int
+    size        String
+    description String
+    from        String
+    totalBought Int      @default(0)
+
+    rating Rating[]
+
+    Catalog   Catalog? @relation(fields: [catalogId], references: [id])
+    catalogId Int?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Catalog {
+    id Int @id @default(autoincrement())
+
+    img  String
+    name String
+
+    products Product[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Rating {
+    id Int @id @default(autoincrement())
+
+    ratingId    String   @unique
+    name        String
+    img         String[]
+    rating      Int
+    description String
+
+    Product   Product? @relation(fields: [productId], references: [id])
+    productId Int?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}

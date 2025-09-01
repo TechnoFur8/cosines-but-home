@@ -1,0 +1,5 @@
+export { Header } from "./header"
+export { MainPage } from "./main-page"
+export { Container } from "./container"
+export { Catalog } from "./catalog"
+export { CatalogProducts } from "./catalog-products"
