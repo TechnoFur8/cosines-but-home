@@ -4,9 +4,20 @@ import { useGetFavoriteQuery } from "@/store/apiSlice"
 import { CldImage } from "next-cloudinary"
 import { FavoriteDelete } from "./favorite-delete"
 import { SelectedSize } from "./selected-size"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export const Favorite = () => {
-    const { data, isLoading, isError } = useGetFavoriteQuery()
+    const { data, isLoading, isError, error } = useGetFavoriteQuery()
+    const router = useRouter()
+
+    useEffect(() => {
+        if (error) {
+            if ("status" in error && error.status === 401) {
+                return router.push("/profil/registration")
+            }
+        }
+    }, [error])
 
     if (isLoading) return <h1>Loading...</h1>
     if (isError) return <h1>Error</h1>

@@ -1,38 +1,42 @@
-import { createToken } from "@/lib/create-token"
+import { verefyToken } from "@/lib/token"
 import { prisma } from "@/prisma/prisma-client"
 import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(req: NextRequest) {
     const cookieStore = await cookies()
-    let token = cookieStore.get("sessionId")
+    const token = cookieStore.get("token")
 
     try {
         if (!token) {
-            const newToken = createToken()
-
-            cookieStore.set("sessionId", newToken, {
-                maxAge: 60 * 60 * 24 * 30,
-                httpOnly: true,
-                secure: true
-            })
-
-            token = { name: "sessionId", value: newToken }
+            return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
         }
 
-        let cart = await prisma.cart.findUnique({ where: { sessionId: token.value } })
+        const userToken = verefyToken(token.value)
+
+        if (!userToken) {
+            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+
+        if (!user) {
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+        }
+
+        let cart = await prisma.cart.findUnique({ where: { userId: user.id } })
 
         if (!cart) {
             cart = await prisma.cart.create({
                 data: {
-                    sessionId: token.value
+                    userId: user.id
                 }
             })
         }
 
-        const cartProduct = await prisma.cartProduct.findMany({ where: { cartId: cart.id }, orderBy: { id: "desc" } })
+        const cartProducts = await prisma.cartProduct.findMany({ where: { cartId: cart.id }, orderBy: { createdAt: "desc" } })
 
-        return NextResponse.json({ cartProduct }, { status: 200 })
+        return NextResponse.json({ cartProducts }, { status: 200 })
     } catch (err) {
         console.error(err)
         return NextResponse.json({ error: err }, { status: 500 })

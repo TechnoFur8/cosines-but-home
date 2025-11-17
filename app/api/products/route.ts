@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/prisma/prisma-client"
 import cloudinary from "@/lib/cloudinary"
+import { verefyToken } from "@/lib/token"
+import { cookies } from "next/headers"
 
 export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams
@@ -22,6 +24,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     const formData = await req.formData()
+    const cookieStore = await cookies()
+    const token = cookieStore.get("token")
 
     const images = formData.getAll("img") as File[]
     const name = formData.get("name") as string
@@ -36,16 +40,37 @@ export async function POST(req: NextRequest) {
     const from = formData.get("from") as string
     const catalogId = formData.get("catalogId") as string
 
-    if (!name || !price || !discount || !compound || !warp || !hight || !hardness || !size || !description || !from) {
-        return NextResponse.json({ message: "Не все поля заполнены" }, { status: 400 })
-    }
-
-    if (!images || images.length === 0) {
-        return NextResponse.json({ message: "Не загружены изображения" }, { status: 400 })
-    }
 
 
     try {
+        if (!token) {
+            return NextResponse.json({ message: "Вы не авторизованы" }, { status: 401 })
+        }
+
+        const userToken = verefyToken(token.value)
+
+        if (!userToken) {
+            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+
+        if (!user) {
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+        }
+
+        if (user.role !== "ADMIN") {
+            return NextResponse.json({ message: "Недостаточно прав" }, { status: 403 })
+        }
+
+        if (!name || !price || !discount || !compound || !warp || !hight || !hardness || !size || !description || !from) {
+            return NextResponse.json({ message: "Не все поля заполнены" }, { status: 400 })
+        }
+
+        if (!images || images.length === 0) {
+            return NextResponse.json({ message: "Не загружены изображения" }, { status: 400 })
+        }
+
         const uploadPromises = images.map(async (file) => {
             const bytes = await file.arrayBuffer()
             const buffer = Buffer.from(bytes)

@@ -1,4 +1,4 @@
-import { createToken } from "@/lib/create-token";
+import { verefyToken } from "@/lib/token";
 import { prisma } from "@/prisma/prisma-client";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -7,23 +7,27 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { id } = await params
     const productId = Number(id)
     const cookieStore = await cookies()
-    let token = cookieStore.get("sessionId")
-
-    if (!productId) {
-        return NextResponse.json({ message: "Неверный ID" }, { status: 404 })
-    }
+    const token = cookieStore.get("token")
 
     try {
+        if (!productId) {
+            return NextResponse.json({ message: "Неверный ID" }, { status: 400 })
+        }
+        
         if (!token) {
-            const newToken = createToken()
+            return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
+        }
 
-            cookieStore.set("sessionId", newToken, {
-                maxAge: 60 * 60 * 24 * 30,
-                httpOnly: true,
-                secure: true
-            })
+        const userToken = verefyToken(token.value)
 
-            token = { name: "sessionId", value: newToken }
+        if (!userToken) {
+            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+        
+        if (!user) {
+            return NextResponse.json({ message: "Пользователь неайден" }, { status: 404 })
         }
 
         const product = await prisma.product.findUnique({ where: { id: productId } })
@@ -32,12 +36,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             return NextResponse.json({ message: "Такого продукта нет" }, { status: 404 })
         }
 
-        let favorite = await prisma.favorite.findUnique({ where: { sessionId: token.value } })
+        let favorite = await prisma.favorite.findUnique({ where: { userId: user.id } })
 
         if (!favorite) {
             favorite = await prisma.favorite.create({
                 data: {
-                    sessionId: token.value
+                    userId: user.id
                 }
             })
         }
@@ -45,7 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const favoriteItem = await prisma.favoriteProduct.findFirst({ where: { favoriteId: favorite.id, productId } })
 
         if (favoriteItem) {
-            return NextResponse.json({ message: "Такой продукт уже есть в избранном" }, { status: 400 })
+            return NextResponse.json({ message: "Товар уже в избранном" }, { status: 400 })
         }
 
         const favoriteProduct = await prisma.favoriteProduct.create({
@@ -60,7 +64,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             }
         })
 
-        return NextResponse.json(favoriteProduct, { status: 200 })
+        return NextResponse.json(favoriteProduct, { status: 201 })
     } catch (err) {
         console.error(err)
         return NextResponse.json({ error: err }, { status: 500 })
@@ -69,33 +73,47 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    const productId = Number(id)
+    const favoriteProductId = Number(id)
     const cookieStore = await cookies()
-    const token = cookieStore.get("sessionId")
+    const token = cookieStore.get("token")
 
-    if (!productId) {
-        return NextResponse.json({ message: "Неверный ID" }, { status: 404 })
+    if (!favoriteProductId) {
+        return NextResponse.json({ message: "Неверный ID" }, { status: 400 })
     }
 
-    if (!token) {
-        return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
-    }
 
     try {
-        const favoriteItem = await prisma.favoriteProduct.findFirst({ where: { productId: productId } })
-
-        if (!favoriteItem) {
-            return NextResponse.json({ message: "Такого продукта нет в избранном" }, { status: 404 })
-        }
-
-        const session = await prisma.favorite.findUnique({ where: { sessionId: token.value } })
-
-        if (!session) {
+        if (!token) {
             return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
         }
 
-        await prisma.favoriteProduct.deleteMany({ where: { productId: favoriteItem.productId, favoriteId: session.id} })
-        return NextResponse.json("Товар удален", { status: 200 })
+        const userToken = verefyToken(token.value)
+
+        if (!userToken) {
+            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+
+        if (!user) {
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+        }
+
+        const favorite = await prisma.favorite.findUnique({ where: { userId: user.id } })
+
+        if (!favorite) {
+            return NextResponse.json({ message: "Избранное не найдено" }, { status: 404 })
+        }
+
+        const favoriteProduct = await prisma.favoriteProduct.findFirst({ where: { favoriteId: favorite.id, id: favoriteProductId } })
+
+        if (!favoriteProduct) {
+            return NextResponse.json({ message: "Товара нет в избранном" }, { status: 404 })
+        }
+
+        await prisma.favoriteProduct.delete({ where: { id: favoriteProduct.id } })
+
+        return NextResponse.json({ message: "Товар удален" }, { status: 200 })
     } catch (err) {
         console.error(err)
         return NextResponse.json({ error: err }, { status: 500 })

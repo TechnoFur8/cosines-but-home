@@ -5,9 +5,20 @@ import { CldImage } from "next-cloudinary"
 import { CartDelete } from "./cart-delete"
 import { CartPut } from "./cart-put"
 import { Frown } from "lucide-react"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export const Cart = () => {
-    const { data, isLoading, isError } = useGetCartQuery()
+    const { data, isLoading, isError, error } = useGetCartQuery()
+    const router = useRouter()
+
+    useEffect(() => {
+        if (error) {
+            if ("status" in error && error.status === 401) {
+                return router.push("/profil/registration")
+            }
+        }
+    }, [error])
 
     if (isLoading) return <h1>Loading...</h1>
     if (isError) return <h1>Error</h1>

@@ -1,5 +1,7 @@
 import cloudinary from "@/lib/cloudinary";
+import { verefyToken } from "@/lib/token";
 import { prisma } from "@/prisma/prisma-client";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -27,15 +29,38 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const formData = await req.formData()
     const { id } = await params
     const catalogId = Number(id)
+    const cookieStore = await cookies()
+    const token = cookieStore.get("token")
 
-    if (!catalogId) {
-        return NextResponse.json({ message: "Неверный ID" }, { status: 404 })
-    }
-
-    const name = formData.get("name") as string
-    const img = formData.get("img") as File
-
+    
     try {
+        if (!token) {
+            return NextResponse.json({ message: "Вы не авторизованы" }, { status: 401 })
+        }
+
+        const userToken = verefyToken(token.value)
+
+        if (!userToken) {
+            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+
+        if (!user) {
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+        }
+
+        if (user.role !== "ADMIN") {
+            return NextResponse.json({ message: "Недостаточно прав" }, { status: 403 })
+        }
+
+        if (!catalogId) {
+            return NextResponse.json({ message: "Неверный ID" }, { status: 404 })
+        }
+    
+        const name = formData.get("name") as string
+        const img = formData.get("img") as File
+
         const catalog = await prisma.catalog.findUnique({ where: { id: catalogId } })
 
         if (!catalog) {
@@ -78,12 +103,34 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const catalogId = Number(id)
-
-    if (!catalogId) {
-        return NextResponse.json({ message: "Неверный ID" }, { status: 404 })
-    }
+    const cookieStore = await cookies()
+    const token = cookieStore.get("token")
 
     try {
+        if (!token) {
+            return NextResponse.json({ message: "Вы не авторизованы" }, { status: 401 })
+        }
+
+        const userToken = verefyToken(token.value)
+
+        if (!userToken) {
+            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+
+        if (!user) {
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+        }
+
+        if (user.role !== "ADMIN") {
+            return NextResponse.json({ message: "Недостаточно прав" }, { status: 403 })
+        }
+
+        if (!catalogId) {
+            return NextResponse.json({ message: "Неверный ID" }, { status: 404 })
+        }
+
         let catalogImg = await prisma.catalog.findUnique({ where: { id: catalogId }, select: { img: true } })
 
         if (catalogImg?.img) {
