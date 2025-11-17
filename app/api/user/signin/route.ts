@@ -7,11 +7,12 @@ import { NextRequest, NextResponse } from "next/server"
 export async function POST(req: NextRequest) {
     const { email, password } = await req.json()
 
-    if (!email || !password) {
-        return NextResponse.json({ message: "Не все поля заполнены" }, { status: 400 })
-    }
-
+    
     try {
+        if (!email || !password) {
+            return NextResponse.json({ message: "Не все поля заполнены" }, { status: 400 })
+        }
+
         const user = await prisma.user.findUnique({ where: { email: email } })
 
         if (!user) {

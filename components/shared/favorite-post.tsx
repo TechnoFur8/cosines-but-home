@@ -6,7 +6,7 @@ import toast from "react-hot-toast"
 import { useFavorite } from "../hooks/use-favorite"
 import Cookies from 'js-cookie'
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 interface Props {
     productId: number
@@ -16,8 +16,15 @@ export const FavoritePost = ({ productId }: Props) => {
     const [postFavorite, { error }] = usePostFavoriteMutation()
     const [deleteFavorite] = useDeleteFavoriteMutation()
     const checkFavorite = useFavorite({ productId })
-    const token = Cookies.get("token")
     const router = useRouter()
+    // const [token, setToken] = useState<boolean | undefined>(undefined)
+    const token = Cookies.get("is_authenticated")
+
+    // useEffect(() => {
+    //     const cookieToken = Cookies.get("is_authenticated")
+    //     setToken(cookieToken)
+    //     console.log(cookieToken);
+    // }, [])
 
     useEffect(() => {
         if (error) {
@@ -29,9 +36,9 @@ export const FavoritePost = ({ productId }: Props) => {
 
     const handleClickFavoritePost = async (productId: number) => {
         try {
-            if (!token) {
-                return router.push("/profil/registration")
-            }
+            // if (!token) {
+            //     return router.push("/profil/registration")
+            // }
 
             await postFavorite(productId).unwrap()
             toast.success("Товар добавлен в избранное")

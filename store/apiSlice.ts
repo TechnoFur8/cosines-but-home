@@ -50,13 +50,31 @@ interface Rating {
     description: string
 }
 
+interface UserRegistration {
+    name?: string
+    email: string
+    password: string
+    repeatPassword?: string
+}
+
 export const apiSlice = createApi({
     reducerPath: "api",
     baseQuery: fetchBaseQuery({
-        baseUrl: "http://localhost:3000/"
+        baseUrl: "http://localhost:3000/",
+        credentials: "include"
     }),
-    tagTypes: ["Product", "Cart", "Favorite", "Catalog", "Rating"],
+    
+    tagTypes: ["Product", "Cart", "Favorite", "Catalog", "Rating", "User"],
     endpoints: (builder) => ({
+        signinUser: builder.mutation<void, UserRegistration>({
+            query: (body) => ({
+                url: "/api/user/signin",
+                method: "POST",
+                body
+            }),
+            invalidatesTags: ["User"]
+        }),
+
         getProducts: builder.query<Product[], { limit: number }>({
             query: ({ limit }) => `/api/products?limit=${limit}`,
             providesTags: ["Product"]
@@ -82,7 +100,7 @@ export const apiSlice = createApi({
             }),
             invalidatesTags: ["Cart"]
         }),
-        getCart: builder.query<{ cartProduct: CartProduct[] }, void>({
+        getCart: builder.query<{ cartProducts: CartProduct[] }, void>({
             query: () => `/api/cart`,
             providesTags: ["Cart"]
         }),
@@ -142,7 +160,7 @@ export const apiSlice = createApi({
             query: (id) => `/api/ratings/${id}`,
             providesTags: ["Rating"]
         }),
-        getMyRating: builder.query<{rating: Rating}, number>({
+        getMyRating: builder.query<{ rating: Rating }, number>({
             query: (id) => `/api/rating-my/${id}`,
             providesTags: ["Rating"]
         }),
@@ -165,6 +183,8 @@ export const apiSlice = createApi({
 })
 
 export const {
+    useSigninUserMutation,
+
     useLazyGetProductsQuery,
     useGetPopularProductsQuery,
     useGetProductOneQuery,
