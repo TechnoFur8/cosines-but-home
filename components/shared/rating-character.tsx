@@ -2,6 +2,8 @@ import { useGetRatingQuery } from "@/store/apiSlice";
 import { Progress } from "../ui/progress";
 import { Star } from "lucide-react";
 import { RatingPost } from "./rating-post";
+import { RatingUser } from "./rating-user";
+import { Rating } from "./rating";
 
 interface Props {
     productId: number
@@ -12,7 +14,7 @@ export const RatingCharacter = ({ productId }: Props) => {
 
     if (isLoading) return <h1>Loading...</h1>
     if (isError) return <h1>Error</h1>
-    if (!data) return <h1>Ошибка загрузки рейтинга</h1>
+    if (!data) return null
 
     const overallRating = data.length !== 0 ? data.map(el => el.rating).reduce((acc, el) => acc + el, 0) / data.length : 0
 
@@ -47,16 +49,16 @@ export const RatingCharacter = ({ productId }: Props) => {
 
     return (
         <>
-            <div className={"flex gap-x-8 mt-30"}>
+            <div className={"flex gap-x-4 mt-30"}>
                 {data.length !== 0
                     ?
                     <>
-                        <div className={"flex flex-col items-start space-y-3"}>
+                        <div className={"flex flex-col items-start space-y-3 mr-8"}>
                             <span className={"text-4xl font-semibold"}>{overallRating}</span>
                             <div className={"flex"}>
                                 {starsFull.map(el => el)}{startEmpty.map(el => el)}
                             </div>
-                            <span>{data.length}</span>
+                            <span className={""}>Всего отзывов: {data.length}</span>
                         </div>
                         <div className={"space-y-3"}>
                             <div className={"flex items-center gap-x-2"}>
@@ -90,7 +92,8 @@ export const RatingCharacter = ({ productId }: Props) => {
                     <h2 className={"text-3xl font-semibold"}>Нет отзывов</h2>
                 }
             </div>
-            <RatingPost productId={productId} />
+            <RatingUser productId={productId} />
+            <Rating productId={productId} />
         </>
     )
 }

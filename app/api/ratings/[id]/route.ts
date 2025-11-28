@@ -19,7 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
         }
 
-        const userToken = verefyToken(token.value)
+        const userToken = await verefyToken(token.value)
 
         if (!userToken) {
             return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
@@ -28,11 +28,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
         if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
         }
 
         if (!ratingStar || ratingStar < 1 || ratingStar > 5) {
             return NextResponse.json({ message: "Неверный рейтинг" }, { status: 400 })
+        }
+
+        if (description.length > 1000) {
+            return NextResponse.json({ message: "Описание слишком длинное" }, { status: 400 })
         }
 
         const product = await prisma.product.findUnique({ where: { id: productId } })
@@ -73,7 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     try {
-        const product = await prisma.rating.findMany({ where: { productId } })
+        const product = await prisma.rating.findMany({ where: { productId }, orderBy: { createdAt: "desc" }, take: 20 })
 
         if (!product) {
             return NextResponse.json({ message: "Такого продукта нет" }, { status: 404 })
@@ -101,7 +105,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
             return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
         }
 
-        const userToken = verefyToken(token.value)
+        const userToken = await verefyToken(token.value)
 
         if (!userToken) {
             return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
@@ -110,7 +114,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
         const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
         if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
         }
 
         if (user.role !== "ADMIN") {

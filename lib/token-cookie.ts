@@ -9,13 +9,5 @@ export const setTokenCookie = (token: string, res: NextResponse) => {
         path: "/"
     })
 
-    res.cookies.set("is_authenticated", "true", {
-        maxAge: 60 * 60 * 24,
-        httpOnly: false,
-        sameSite: "strict",
-        secure: process.env.NODE_ENV === "production",
-        path: "/"
-    })
-
     return res
 }

@@ -12,10 +12,6 @@ const transporter = nodemailer.createTransport({
     }
 })
 
-export async function GET(req: NextRequest) {
-
-}
-
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies()
     const token = cookieStore.get("token")
@@ -34,7 +30,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
         }
 
-        const userToken = verefyToken(token.value)
+        const userToken = await verefyToken(token.value)
 
         if (!userToken) {
             return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
@@ -43,13 +39,13 @@ export async function POST(req: NextRequest) {
         const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
         if (!user) {
-            return NextResponse.json({ message: "Пользователь неайден" }, { status: 404 })
+            return NextResponse.json({ message: "Пользователь неайден" }, { status: 401 })
         }
 
         const cart = await prisma.cart.findUnique({ where: { userId: user.id } })
 
         if (!cart) {
-            return NextResponse.json({ message: "Корзина неайдена" }, { status: 404 })
+            return NextResponse.json({ message: "Корзина не найдена" }, { status: 404 })
         }
 
         const cartItem = await prisma.cartProduct.findMany({ where: { cartId: cart.id } })
@@ -61,6 +57,17 @@ export async function POST(req: NextRequest) {
         const total = cartItem.reduce((acc, el) => acc + el.price, 0)
 
         const result = await prisma.$transaction(async (tx) => {
+            const updateProduct = await Promise.all(
+                cartItem.map(el => {
+                    return tx.product.updateMany({
+                        where: { id: el.productId },
+                        data: {
+                            totalBought: { increment: el.quantity }
+                        }
+                    })
+                })
+            )
+
             const order = await tx.order.create({
                 data: {
                     name: user.name,
@@ -90,7 +97,7 @@ export async function POST(req: NextRequest) {
                 where: { cartId: cart.id }
             })
 
-            return { order, orderItems }
+            return { order, orderItems, updateProduct }
         })
 
         const fromClient = {
@@ -258,6 +265,40 @@ export async function POST(req: NextRequest) {
         })
 
         return NextResponse.json({ message: "Заказ создан", order: result.order }, { status: 201 })
+    } catch (err) {
+        console.error(err)
+        return NextResponse.json({ error: err }, { status: 500 })
+    }
+}
+
+export async function GET(req: NextRequest) {
+    const cookieStore = await cookies()
+    const token = cookieStore.get("token")
+
+    try {
+        if (!token) {
+            return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
+        }
+
+        const userToken = await verefyToken(token.value)
+
+        if (!userToken) {
+            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        }
+
+        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+
+        if (!user) {
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
+        }
+
+        if (user.role !== "ADMIN") {
+            return NextResponse.json({ message: "Недостаточно прав" }, { status: 403 })
+        }
+
+        const orders = await prisma.order.findMany({ orderBy: { createdAt: "desc" }, include: { orderItems: true } })
+
+        return NextResponse.json({ orders }, { status: 200 })
     } catch (err) {
         console.error(err)
         return NextResponse.json({ error: err }, { status: 500 })

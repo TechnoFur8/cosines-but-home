@@ -7,14 +7,17 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
 import { Input } from "../ui/input"
 import { useState } from "react"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, LoaderCircle } from "lucide-react"
 import { Button } from "../ui/button"
 import { useSigninUserMutation } from "@/store/apiSlice"
 import toast from "react-hot-toast"
+import { usePathname, useRouter } from "next/navigation"
 
 export const UserSignin = () => {
     const [postUser, { isLoading }] = useSigninUserMutation()
     const [checkPassword, setCheckPassword] = useState(false)
+    const router = useRouter()
+    const pathname = usePathname()
 
     const formSchema = z.object({
         email: z.string().min(2, "Короткий email").email(),
@@ -33,9 +36,14 @@ export const UserSignin = () => {
         try {
             await postUser({ email: data.email, password: data.password }).unwrap()
             toast.success("Успешный вход")
+            if (pathname === "/profil/registration") {
+                return window.history.back()
+            } else {
+                return router.push(pathname)
+            }
         } catch (err) {
             console.error(err)
-            toast.error("Произошла ошибка")
+            toast.error("Не смогли войти в аккаунт")
         }
     }
 
@@ -77,7 +85,7 @@ export const UserSignin = () => {
                                 </FormItem>
                             )}
                         />
-                        <Button disabled={isLoading} type="submit">Войти</Button>
+                        <Button disabled={isLoading} type="submit">{isLoading ? <><LoaderCircle className={"animate-spin"} /> Входим</> : "Войти"}</Button>
                     </form>
                 </Form>
             </CardContent>

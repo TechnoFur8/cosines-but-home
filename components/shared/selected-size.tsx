@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { selectedSize } from "@/lib/selected-size"
@@ -8,6 +8,7 @@ import { usePostCartMutation } from "@/store/apiSlice"
 import toast from "react-hot-toast"
 import { useCart } from "../hooks/use-cart"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 
 interface Props {
     className?: string
@@ -19,26 +20,41 @@ interface Props {
 
 export const SelectedSize = ({ productSize, price, discount, productId, className }: Props) => {
     const [selectSize, setSelectSize] = useState("")
-    const [postCart] = usePostCartMutation()
+    const [postCart, { error, isLoading }] = usePostCartMutation()
     const check = useCart({ productId, size: selectSize })
+    const router = useRouter()
+
+    useEffect(() => {
+        if (error) {
+            if ("status" in error && error.status === 401) {
+                return router.push("/profil/registration")
+            }
+        }
+    }, [error])
 
     const handleClickPostCart = async (productId: number) => {
-        if (selectSize.length === 0) {
-            return toast("Выберите размер", { icon: "❗" })
-        }
-
-        if (check) {
-            return toast("Товар уже в корзине", { icon: "❗" })
-        }
-
-        toast.promise(
-            postCart({ id: productId, size: selectSize }).unwrap(),
-            {
-                loading: "Добовляем товар в корзину",
-                success: "Добавили товар в корзину",
-                error: "Произошла ошибка",
+        try {
+            await toast.promise(
+                postCart({ id: productId, size: selectSize }).unwrap(),
+                {
+                    loading: "Добавляем товар в корзину",
+                    success: "Добавили товар в корзину",
+                    error: "Произошла ошибка"
+                }
+            )
+        } catch (err) {
+            if (selectSize.length === 0) {
+                return toast("Выберите размер", { icon: "❗" })
             }
-        )
+
+            if (check) {
+                return toast("Товар уже в корзине", { icon: "❗" })
+            }
+
+            console.error(err)
+            return toast.error("Произошла ошибка")
+        }
+
     }
 
     return (

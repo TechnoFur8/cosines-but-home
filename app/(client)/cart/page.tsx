@@ -3,7 +3,7 @@ import { Cart } from "@/components/shared/cart";
 
 export default function CartPage() {
     return (
-        <Container>
+        <Container className={"my-10"}>
             <Cart />
         </Container>
     )

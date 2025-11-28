@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
         }
 
-        const userToken = verefyToken(token.value)
+        const userToken = await verefyToken(token.value)
 
         if (!userToken) {
             return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
         if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
         }
 
         let cart = await prisma.cart.findUnique({ where: { userId: user.id } })

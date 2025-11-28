@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: "Вы не авторизованы" }, { status: 401 })
         }
 
-        const userToken = verefyToken(token.value)
+        const userToken = await verefyToken(token.value)
 
         if (!userToken) {
             return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
         const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
         if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
         }
 
         if (user.role !== "ADMIN") {

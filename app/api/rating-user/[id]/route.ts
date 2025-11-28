@@ -18,7 +18,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
         }
 
-        const userToken = verefyToken(token.value)
+        const userToken = await verefyToken(token.value)
 
         if (!userToken) {
             return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
@@ -37,10 +37,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         }
 
         const rating = await prisma.rating.findFirst({ where: { userId: user.id, productId } })
-
-        if (!rating) {
-            return NextResponse.json({ message: "Рейтинг не найден" }, { status: 404 })
-        }
 
         return NextResponse.json({ rating }, { status: 200 })
     } catch (err) {
@@ -66,11 +62,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ message: "Неверный рейтинг" }, { status: 400 })
         }
 
+        if (description.length > 1000) {
+            return NextResponse.json({ message: "Описание слишком длинное" }, { status: 400 })
+        }
+
         if (!token) {
             return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
         }
 
-        const userToken = verefyToken(token.value)
+        const userToken = await verefyToken(token.value)
 
         if (!userToken) {
             return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
@@ -121,7 +121,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
             return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
         }
 
-        const userToken = verefyToken(token.value)
+        const userToken = await verefyToken(token.value)
 
         if (!userToken) {
             return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
@@ -130,7 +130,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
         const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
         if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
         }
 
         const rating = await prisma.rating.findUnique({ where: { id: ratingId, userId: user.id } })

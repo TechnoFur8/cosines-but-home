@@ -17,14 +17,6 @@ export const FavoritePost = ({ productId }: Props) => {
     const [deleteFavorite] = useDeleteFavoriteMutation()
     const checkFavorite = useFavorite({ productId })
     const router = useRouter()
-    // const [token, setToken] = useState<boolean | undefined>(undefined)
-    const token = Cookies.get("is_authenticated")
-
-    // useEffect(() => {
-    //     const cookieToken = Cookies.get("is_authenticated")
-    //     setToken(cookieToken)
-    //     console.log(cookieToken);
-    // }, [])
 
     useEffect(() => {
         if (error) {
@@ -36,15 +28,11 @@ export const FavoritePost = ({ productId }: Props) => {
 
     const handleClickFavoritePost = async (productId: number) => {
         try {
-            // if (!token) {
-            //     return router.push("/profil/registration")
-            // }
-
             await postFavorite(productId).unwrap()
-            toast.success("Товар добавлен в избранное")
+            return toast.success("Товар добавлен в избранное")
         } catch (err) {
             console.error(err)
-            toast.error("Произошла ошибка")
+            return toast.error("Произошла ошибка")
         }
     }
 

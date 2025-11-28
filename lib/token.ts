@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken"
+import { jwtVerify } from 'jose'
 
 interface User {
     userId: number,
@@ -23,13 +24,16 @@ export const createToken = ({ userId, userEmail, userRole }: User) => {
     }
 }
 
-export const verefyToken = (token: string): User | null => {
+export const verefyToken = async (token: string): Promise<User | null> => {
     try {
         if (!process.env.SECRET_KEY) {
             throw new Error("SECRET_KEY is not defined")
         }
 
-        return jwt.verify(token, process.env.SECRET_KEY) as User
+        const secret = new TextEncoder().encode(process.env.SECRET_KEY)
+        const { payload } = await jwtVerify(token, secret)
+
+        return payload as unknown as User
     } catch (err) {
         console.error(err)
         return null

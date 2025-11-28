@@ -8,11 +8,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, LoaderCircle, UserRound } from "lucide-react"
+import { useSignupUserMutation } from "@/store/apiSlice"
+import toast from "react-hot-toast"
+import { usePathname, useRouter } from "next/navigation"
 
 export const UserSignup = () => {
     const [checkPassword, setCheckPassword] = useState(false)
     const [secondCheckPassword, setSecondCheckPassword] = useState(false)
+    const [postUser, { isLoading }] = useSignupUserMutation()
+    const router = useRouter()
+    const pathname = usePathname()
 
     const formSchema = z.object({
         name: z.string().min(2, "Имя не может быть короче 2 букв"),
@@ -34,8 +40,20 @@ export const UserSignup = () => {
         }
     })
 
-    const onSubmit = (data: z.infer<typeof formSchema>) => {
-        console.log(data);
+    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        try {
+            await postUser({ name: data.name, email: data.email, password: data.password, repeatPassword: data.secondPassword }).unwrap()
+            toast.success("Успешная регистрация")
+            
+            if (pathname === "/profil/registration") {
+                return window.history.back()
+            } else {
+                return router.push(pathname)
+            }
+        } catch (err) {
+            console.error(err)
+            toast.error("Не смогли зарегистрировать аккаунт")
+        }
     }
 
     return (
@@ -105,7 +123,7 @@ export const UserSignup = () => {
                                 </FormItem>
                             )}
                         />
-                        <Button type="submit">Зарегистрироваться</Button>
+                        <Button disabled={isLoading} type="submit">{isLoading ? <><LoaderCircle className={"animate-spin"} /> Регистрируем</> : "Зарегистрироваться"}</Button>
                     </form>
                 </Form>
             </CardContent>

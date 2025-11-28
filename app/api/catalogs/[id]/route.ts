@@ -32,13 +32,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const cookieStore = await cookies()
     const token = cookieStore.get("token")
 
-    
+
     try {
         if (!token) {
             return NextResponse.json({ message: "Вы не авторизованы" }, { status: 401 })
         }
 
-        const userToken = verefyToken(token.value)
+        const userToken = await verefyToken(token.value)
 
         if (!userToken) {
             return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
@@ -47,7 +47,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
         if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
         }
 
         if (user.role !== "ADMIN") {
@@ -57,9 +57,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         if (!catalogId) {
             return NextResponse.json({ message: "Неверный ID" }, { status: 404 })
         }
-    
+
         const name = formData.get("name") as string
-        const img = formData.get("img") as File
+        const img = formData.get("img") as File | null
 
         const catalog = await prisma.catalog.findUnique({ where: { id: catalogId } })
 
@@ -67,11 +67,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ message: "Такого каталога нет" }, { status: 404 })
         }
 
-        const publicId = catalog.img.split("/").slice(-1).join("").split(".")[0]
-
         let imgUrl = catalog.img
 
-        if (img) {
+        // Если есть новый файл, загружаем его
+        if (img && img.size > 0) {
+            const publicId = catalog.img.split("/").slice(-1).join("").split(".")[0]
             const bytes = await img.arrayBuffer()
             const base64 = Buffer.from(bytes).toString("base64")
             const dataUrl = `data:${img.type};base64,${base64}`
@@ -84,6 +84,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
             imgUrl = uploaded.secure_url
         }
+        // Если файла нет, оставляем старую картинку (imgUrl уже = catalog.img)
 
         const updated = await prisma.catalog.update({
             where: { id: catalogId },
@@ -111,7 +112,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
             return NextResponse.json({ message: "Вы не авторизованы" }, { status: 401 })
         }
 
-        const userToken = verefyToken(token.value)
+        const userToken = await verefyToken(token.value)
 
         if (!userToken) {
             return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
@@ -120,7 +121,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
         const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
         if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
         }
 
         if (user.role !== "ADMIN") {

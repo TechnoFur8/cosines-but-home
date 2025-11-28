@@ -17,8 +17,15 @@ import 'swiper/css/navigation';
 import { selectedSize } from "@/lib/selected-size";
 import { CartPost } from "./cart-post";
 import { RatingCharacter } from "./rating-character";
+import { ProductUpdate } from "./product-update";
 
-export const ProductOption = () => {
+type User = { userId: number, userEmail: string, userRole: string }
+
+interface Props {
+    role: User | null
+}
+
+export const ProductOption = ({ role }: Props) => {
     const [selectedSizeIndex, setSelectedSizeIndex] = useState<number | null>(null)
     const [selectedSizeElement, setSelectedSizeElement] = useState<string>("")
 
@@ -31,7 +38,10 @@ export const ProductOption = () => {
 
 
     return (
-        <div>
+        <div className="relative">
+            {role?.userRole === "ADMIN" && data && (
+                <ProductUpdate product={data} />
+            )}
             <Breadcrumb>
                 <BreadcrumbList>
                     <BreadcrumbItem>
