@@ -1,7 +1,7 @@
 import { useDeleteFavoriteMutation } from "@/store/apiSlice"
 import toast from "react-hot-toast"
 import { Button } from "../ui/button"
-import { LoaderCircle } from "lucide-react"
+import { LoaderCircle, Trash2 } from "lucide-react"
 
 interface Props {
     id: number
@@ -21,16 +21,23 @@ export const FavoriteDelete = ({ id }: Props) => {
     }
 
     return (
-        <Button onClick={() => handleClickDeleteFavorite(id)} variant={"secondary"} className={"cursor-pointer shadow"}>
-            {isLoading
-                ?
+        <Button 
+            onClick={() => handleClickDeleteFavorite(id)} 
+            variant={"secondary"} 
+            className={"cursor-pointer shadow w-full sm:w-auto min-w-[100px]"}
+            disabled={isLoading}
+        >
+            {isLoading ? (
                 <>
+                    <LoaderCircle className={"animate-spin w-4 h-4 mr-2"} />
                     Удаляем
-                    <LoaderCircle className={"animate-spin"} />
                 </>
-                :
-                "Удалить"
-            }
+            ) : (
+                <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Удалить
+                </>
+            )}
         </Button>
     )
 }

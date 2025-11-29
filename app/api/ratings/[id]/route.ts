@@ -102,7 +102,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
         }
 
         if (!token) {
-            return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
+            return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
         }
 
         const userToken = await verefyToken(token.value)

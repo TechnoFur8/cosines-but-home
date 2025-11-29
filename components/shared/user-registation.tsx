@@ -4,7 +4,7 @@ import { UserSignup } from "./user-signup"
 
 export const UserRegistation = () => {
     return (
-        <div className={"min-w-120 mx-auto"}>
+        <div className={"sm:min-w-120 min-w-full mx-auto"}>
             <Tabs defaultValue="signin">
                 <TabsList>
                     <TabsTrigger value="signin">Вход</TabsTrigger>

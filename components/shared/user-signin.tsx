@@ -37,7 +37,10 @@ export const UserSignin = () => {
             await postUser({ email: data.email, password: data.password }).unwrap()
             toast.success("Успешный вход")
             if (pathname === "/profil/registration") {
-                return window.history.back()
+                window.history.back()
+                setTimeout(() => {
+                    window.location.reload()
+                }, 100)
             } else {
                 return router.push(pathname)
             }

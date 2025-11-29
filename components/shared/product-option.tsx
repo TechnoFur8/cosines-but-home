@@ -1,8 +1,6 @@
 "use client"
 
-import { useGetProductOneQuery } from "@/store/apiSlice";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator } from "../ui/breadcrumb";
-import { useParams } from "next/navigation";
 import { Button } from "../ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { useState } from "react";
@@ -18,24 +16,18 @@ import { selectedSize } from "@/lib/selected-size";
 import { CartPost } from "./cart-post";
 import { RatingCharacter } from "./rating-character";
 import { ProductUpdate } from "./product-update";
+import { Product } from "@/types/product";
 
 type User = { userId: number, userEmail: string, userRole: string }
 
 interface Props {
     role: User | null
+    data: Product
 }
 
-export const ProductOption = ({ role }: Props) => {
+export const ProductOption = ({ role, data }: Props) => {
     const [selectedSizeIndex, setSelectedSizeIndex] = useState<number | null>(null)
     const [selectedSizeElement, setSelectedSizeElement] = useState<string>("")
-
-    const { id } = useParams()
-    const { data, isLoading, isError } = useGetProductOneQuery(Number(id))
-
-    if (isLoading) return <h1>Loading...</h1>
-    if (isError) return <h1>Error</h1>
-    if (!data) return <h1>Ошибка загрузки товара</h1>
-
 
     return (
         <div className="relative">
@@ -67,35 +59,35 @@ export const ProductOption = ({ role }: Props) => {
                 </Swiper>
             </div>
             <div className={"space-y-4"}>
-                <h1 className={"text-4xl font-bold"}>{data.name}</h1>
+                <h1 className={"sm:text-4xl text-2xl font-bold"}>{data.name}</h1>
                 <Accordion type="single" collapsible>
                     <AccordionItem value="item-1">
-                        <AccordionTrigger className={"text-2xl font-semibold"}>Описание</AccordionTrigger>
+                        <AccordionTrigger className={"sm:text-2xl text-lg font-semibold"}>Описание</AccordionTrigger>
                         <AccordionContent>
-                            <p className="text-[16px]">{data.description}</p>
+                            <p className="text-base">{data.description}</p>
                         </AccordionContent>
                     </AccordionItem>
                 </Accordion>
-                <h3 className={"text-2xl font-semibold"}>Выберите размер</h3>
+                <h3 className={"sm:text-2xl text-lg font-semibold"}>Выберите размер</h3>
                 <div className={"space-x-3 space-y-2"}>
                     {data.size.split(" ").map((el, i) =>
                         <Button
                             onClick={() => { setSelectedSizeIndex(i), setSelectedSizeElement(el) }}
-                            className={"cursor-pointer shadow rounded-sm rounded-black-900 relative"}
+                            className={"cursor-pointer shadow rounded-sm rounded-black-900 relative sm:text-base text-sm"}
                             variant={selectedSizeIndex === i ? "default" : "secondary"} key={i}
                         >
                             {el} {selectedSizeIndex === i && <Check className={"absolute font-bold top-0.5 right-0.5 size-3"} />}
                         </Button>
                     )}
                 </div>
-                <h3 className={"text-2xl font-semibold"}>Цена</h3>
+                <h3 className={"sm:text-2xl text-lg font-semibold"}>Цена</h3>
                 <div className={"flex flex-col"}>
-                    <span className={"text-[18px]"}>{selectedSizeElement.length === 0 ? data.price.toLocaleString("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0, minimumFractionDigits: 0 }) : selectedSize(selectedSizeElement, data.price).toLocaleString("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0, minimumFractionDigits: 0 })}</span>
-                    <span className={"text-[#737373] text-sm line-through"}>{selectedSizeElement.length === 0 ? data.discount.toLocaleString("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0, minimumFractionDigits: 0 }) : selectedSize(selectedSizeElement, data.discount).toLocaleString("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0, minimumFractionDigits: 0 })}</span>
+                    <span className={"sm:text-[18px] text-sm"}>{selectedSizeElement.length === 0 ? data.price.toLocaleString("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0, minimumFractionDigits: 0 }) : selectedSize(selectedSizeElement, data.price).toLocaleString("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0, minimumFractionDigits: 0 })}</span>
+                    <span className={"text-[#737373] sm:text-sm text-sx line-through"}>{selectedSizeElement.length === 0 ? data.discount.toLocaleString("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0, minimumFractionDigits: 0 }) : selectedSize(selectedSizeElement, data.discount).toLocaleString("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 0, minimumFractionDigits: 0 })}</span>
                 </div>
                 <CartPost productId={data.id} size={selectedSizeElement} />
-                <h3 className={"text-2xl font-semibold"}>Характеристики</h3>
-                <div>
+                <h3 className={"sm:text-2xl text-lg font-semibold"}>Характеристики</h3>
+                <div className={"sm:text-base text-sm"}>
                     <div className={"w-full h-[1px] bg-[#E5E8EB]"} />
                     <div className={"flex py-4"}>
                         <div className={"flex flex-col w-[50%]"}>
@@ -125,7 +117,7 @@ export const ProductOption = ({ role }: Props) => {
                     </div>
                 </div>
             </div>
-            <RatingCharacter productId={Number(id)} />
+            <RatingCharacter productId={Number(data.id)} />
         </div>
     )
 }

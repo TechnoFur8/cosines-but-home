@@ -82,19 +82,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
         let imageUrls = [...product.img]
 
-        if (deletedImages) {
-            const deletedImagesArray = JSON.parse(deletedImages) as string[]
+        if (deletedImages && deletedImages.trim() !== "") {
+            try {
+                const deletedImagesArray = JSON.parse(deletedImages) as string[]
 
-            if (deletedImagesArray.length > 0) {
-                try {
-                    await deleteMultipleImg(deletedImagesArray)
-                } catch (err) {
-                    console.error("Ошибка при удалении файлов из Cloudinary:", err)
-                    return NextResponse.json({ message: "Ошибка при удалении изображений" }, { status: 500 })
+                if (deletedImagesArray.length > 0) {
+                    try {
+                        await deleteMultipleImg(deletedImagesArray)
+                    } catch (err) {
+                        console.error("Ошибка при удалении файлов из Cloudinary:", err)
+                        return NextResponse.json({ message: "Ошибка при удалении изображений" }, { status: 500 })
+                    }
                 }
-            }
 
-            imageUrls = imageUrls.filter(img => !deletedImagesArray.includes(img))
+                imageUrls = imageUrls.filter(img => !deletedImagesArray.includes(img))
+            } catch (err) {
+                console.error("Ошибка при парсинге deletedImages:", err)
+            }
         }
 
         let newImgUrls: string[] = []
@@ -110,7 +114,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
                         const result = await cloudinary.uploader.upload(dataURL, {
                             folder: 'products'
                         })
-                        return result.public_id
+                        return result.secure_url
                     }
                     return null
                 })
@@ -148,9 +152,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
         })
 
-        const updatePrice = selectedSize(productUpdate.size, productUpdate.price)
-        const updateDiscount = selectedSize(productUpdate.size, productUpdate.discount)
-
         const productCart = await prisma.cartProduct.findMany({ where: { productId } })
 
         if (product.size !== productUpdate.size) {
@@ -158,16 +159,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         }
 
         if (productCart.length > 0) {
-            await prisma.cartProduct.updateMany({
-                where: {
-                    productId
-                },
-                data: {
-                    name: productUpdate.name,
-                    price: updatePrice,
-                    discount: updateDiscount,
-                }
-            })
+            await Promise.all(
+                productCart.map(cartItem =>
+                    prisma.cartProduct.update({
+                        where: { id: cartItem.id },
+                        data: {
+                            name: productUpdate.name,
+                            price: selectedSize(cartItem.size, productUpdate.price),
+                            discount: selectedSize(cartItem.size, productUpdate.discount),
+                        }
+                    })
+                )
+            )
         }
 
         return NextResponse.json(productUpdate, { status: 200 })

@@ -3,7 +3,7 @@ import { Profil } from "@/components/shared/profil";
 
 export default function ProfilPage() {
     return (
-        <Container className={"my-10"}>
+        <Container>
             <Profil />
         </Container>
     )

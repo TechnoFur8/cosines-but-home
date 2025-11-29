@@ -3,7 +3,7 @@ import { Favorite } from "@/components/shared/favorite";
 
 export default function FavoritePage() {
     return (
-        <Container className={"my-10"}>
+        <Container>
             <Favorite />
         </Container>
     )

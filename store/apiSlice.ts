@@ -1,19 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"
-
-interface Product {
-    id: number
-    img: string[]
-    name: string
-    price: number
-    discount: number
-    compound: string
-    warp: string
-    hight: number
-    hardness: number
-    size: string
-    description: string
-    from: string
-}
+import { Product } from "@/types/product"
+import { Catalog } from "@/types/catalog"
 
 interface CartProduct {
     id: number
@@ -34,12 +21,6 @@ interface FavoriteProduct {
     discount: number
     size: string
     productId: number
-}
-
-interface Catalog {
-    id: number
-    img: string
-    name: string
 }
 
 interface Rating {
@@ -102,7 +83,7 @@ interface OrderUser {
 export const apiSlice = createApi({
     reducerPath: "api",
     baseQuery: fetchBaseQuery({
-        baseUrl: "http://localhost:3000/",
+        baseUrl: "http://192.168.0.151:3000/",
         credentials: "include"
     }),
 
@@ -289,7 +270,7 @@ export const apiSlice = createApi({
         }),
         deleteRating: builder.mutation<void, number>({
             query: (id) => ({
-                url: `/api/raings/${id}`,
+                url: `/api/ratings/${id}`,
                 method: "DELETE",
             }),
             invalidatesTags: ["Rating"]

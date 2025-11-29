@@ -1,9 +1,10 @@
+import { Container } from "@/components/shared";
 import { AboutUs } from "@/components/shared/about-us";
 
 export default function AboutUsPage() {
     return (
-        <main className="flex min-h-screen flex-col items-center justify-between p-24">
+        <Container>
             <AboutUs />
-        </main>
+        </Container>
     )
 }

@@ -52,7 +52,7 @@ export const RatingCharacter = ({ productId }: Props) => {
             <div className={"flex gap-x-4 mt-30"}>
                 {data.length !== 0
                     ?
-                    <>
+                    <div className={"sm:flex w-full"}>
                         <div className={"flex flex-col items-start space-y-3 mr-8"}>
                             <span className={"text-4xl font-semibold"}>{overallRating}</span>
                             <div className={"flex"}>
@@ -63,33 +63,33 @@ export const RatingCharacter = ({ productId }: Props) => {
                         <div className={"space-y-3"}>
                             <div className={"flex items-center gap-x-2"}>
                                 <span className={"text-sm"}>5</span>
-                                <Progress className={"w-90"} value={percentages[4]} />
+                                <Progress className={"sm:w-90 w-full"} value={percentages[4]} />
                                 <span className={"text-sm text-[#737373]"}>{percentages[4]}%</span>
                             </div>
                             <div className={"flex items-center gap-x-2"}>
                                 <span className={"text-sm"}>4</span>
-                                <Progress className={"w-90"} value={percentages[3]} />
+                                <Progress className={"sm:w-90 w-full"} value={percentages[3]} />
                                 <span className={"text-sm text-[#737373]"}>{percentages[3]}%</span>
                             </div>
                             <div className={"flex items-center gap-x-2"}>
                                 <span className={"text-sm"}>3</span>
-                                <Progress className={"w-90"} value={percentages[2]} />
+                                <Progress className={"sm:w-90 w-full"} value={percentages[2]} />
                                 <span className={"text-sm text-[#737373]"}>{percentages[2]}%</span>
                             </div>
                             <div className={"flex items-center gap-x-2"}>
                                 <span className={"text-sm"}>2</span>
-                                <Progress className={"w-90"} value={percentages[1]} />
+                                <Progress className={"sm:w-90 w-full"} value={percentages[1]} />
                                 <span className={"text-sm text-[#737373]"}>{percentages[1]}%</span>
                             </div>
                             <div className={"flex items-center gap-x-2"}>
                                 <span className={"text-sm"}>1</span>
-                                <Progress className={"w-90"} value={percentages[0]} />
+                                <Progress className={"sm:w-90 w-full"} value={percentages[0]} />
                                 <span className={"text-sm text-[#737373]"}>{percentages[0]}%</span>
                             </div>
                         </div>
-                    </>
+                    </div>
                     :
-                    <h2 className={"text-3xl font-semibold"}>Нет отзывов</h2>
+                    <h2 className={"sm:text-3xl text-xl font-semibold"}>Нет отзывов</h2>
                 }
             </div>
             <RatingUser productId={productId} />

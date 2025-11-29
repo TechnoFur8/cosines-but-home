@@ -3,7 +3,7 @@ import { SearchProducts } from "@/components/shared/search-products";
 
 export default function SearchPage() {
     return (
-        <Container className={"my-10"}>
+        <Container className={"sm:my-10 my-15"}>
             <SearchProducts />
         </Container>
     );

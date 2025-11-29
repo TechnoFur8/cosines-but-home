@@ -115,9 +115,13 @@ export const AdminPanelProducts = () => {
     }
 
     return (
-        <div className={"w-[50%]"}>
-            <h2 className={"font-medium text-2xl mb-5"}>Создать товар</h2>
-            <Form {...form}>
+        <div className={"w-full"}>
+            <div className="mb-4 sm:mb-6">
+                <h2 className={"text-xl sm:text-2xl font-semibold text-gray-900 mb-2"}>Создать товар</h2>
+                <p className="text-sm text-gray-600">Заполните форму для добавления нового товара в каталог</p>
+            </div>
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-6">
+                <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <FormField
                         control={form.control}
@@ -128,12 +132,12 @@ export const AdminPanelProducts = () => {
                                 <FormControl>
                                     <div>
                                         <Input multiple type="file" {...rest} onChange={handleFileChange} accept="image/*,.png,.jpg,.web" />
-                                        <div className={"grid grid-cols-5 gap-x-5 gap-y-10 my-5"}>
+                                        <div className={"grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 my-5"}>
                                             {previewUrls.map((el: string, i: number) => (
-                                                <div key={i} className={"flex w-30 relative"}>
-                                                    <Image className={"object-cover rounded-2xl min-h-[190px] max-h-[190px]"} src={el} alt="asd" width={120} height={190} />
-                                                    <button onClick={() => handleRemoveFile(i)} className={"cursor-pointer absolute right-1 top-1"}>
-                                                        <Trash2 color='black' fill='currentColor' className={'hover:text-red-600 duration-300 transition hover:scale-120 text-[#E5E5EA]'} />
+                                                <div key={i} className={"flex w-full relative group"}>
+                                                    <Image className={"object-cover rounded-lg min-h-[120px] sm:min-h-[150px] max-h-[120px] sm:max-h-[150px] w-full"} src={el} alt="Preview" width={120} height={190} />
+                                                    <button onClick={() => handleRemoveFile(i)} className={"cursor-pointer absolute right-2 top-2 p-1 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"}>
+                                                        <Trash2 className={'w-4 h-4 text-red-600'} />
                                                     </button>
                                                 </div>
                                             ))}
@@ -319,9 +323,19 @@ export const AdminPanelProducts = () => {
                             </FormItem>
                         )}
                     />
-                    <Button disabled={isLoading} type="submit">{isLoading ? <><LoaderCircle className={"animate-spin"} /> Создаем</> : "Создать"}</Button>
+                    <Button disabled={isLoading} type="submit" className="w-full sm:w-auto">
+                        {isLoading ? (
+                            <>
+                                <LoaderCircle className={"animate-spin mr-2"} />
+                                Создаем товар
+                            </>
+                        ) : (
+                            "Создать товар"
+                        )}
+                    </Button>
                 </form>
             </Form>
+            </div>
         </div>
     )
 }

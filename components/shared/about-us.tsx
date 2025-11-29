@@ -68,17 +68,17 @@ export const AboutUs = () => {
 
     return (
         <div className={"space-y-5"}>
-            <h1 className={"font-bold text-[32px]"}>Контакты</h1>
+            <h1 className={"font-bold sm:text-[32px] text-2xl"}>Контакты</h1>
             <div id='map' className={"w-full sm:h-[522px] h-90 bg-white overflow-hidden rounded-2xl shadow"} />
-            <Image className={"rounded-2xl shadow"} src={"/photo_2025-06-01_12-48-02.jpg"} alt="картинка" width={1000} height={500} />
-            <h2 className={"font-bold text-[22px] mt-"}>Где мы находимся</h2>
-            <p>МКАД, 14-й километр, 10с2, место АНК-81</p>
-            <h2 className={"font-bold text-[22px]"}>Наши контакты</h2>
+            <Image className={"rounded-2xl shadow"} src={"/photo_2025-06-01_12-48-02.jpg"} alt="картинка" width={1120} height={500} />
+            <h2 className={"font-bold sm:text-[22px] text-xl"}>Где мы находимся</h2>
+            <p className={"sm:text-base text-sm"}>МКАД, 14-й километр, 10с2, место АНК-81</p>
+            <h2 className={"font-bold sm:text-[22px] text-xl"}>Наши контакты</h2>
             <div className={"flex flex-col space-y-4"}>
-                <Link href={"tel: +7 964 717 67-16"} >Телефон: +7 964 717 67-16</Link>
-                <Link href={"mailto: cosinessbuthome@gmail.com"}>Email: cosinessbuthome@gmail.com</Link>
+                <Link className={"text-sm sm:text-base text-blue-500 underline"} href={"tel: +7 964 717 67-16"} >Телефон: +7 964 717 67-16</Link>
+                <Link className={"text-sm sm:text-base text-blue-500 underline"} href={"mailto: cosinessbuthome@gmail.com"}>Email: cosinessbuthome@gmail.com</Link>
             </div>
-            <h2 className={"font-bold text-[22px]"}>Наши социальные сети</h2>
+            <h2 className={"font-bold sm:text-[22px] text-xl"}>Наши социальные сети</h2>
             <div className="flex justify-between w-20">
                 <Link href={"https://t.me/+79647176716"} target='_blank'>
                     <Image src={"/tg.svg"} alt='Ссылка на телеграм' width={30} height={30} />

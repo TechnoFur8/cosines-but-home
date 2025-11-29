@@ -1,25 +1,21 @@
 "use client"
 
-import { useGetCatalogQuery } from "@/store/apiSlice"
 import { CldImage } from "next-cloudinary"
 import Link from "next/link"
 import { CatalogUpdate } from "./catalog-update"
+import { Catalog } from "@/types/catalog"
 
 type User = { userId: number, userEmail: string, userRole: string }
 
 interface Props {
     role: User | null
+    data: Catalog[]
 }
 
-export const Catalog = ({ role }: Props) => {
-    const { data, isLoading, isError } = useGetCatalogQuery()
-
-    if (isLoading) return <h1>Loading...</h1>
-    if (isError) return <h1>Error</h1>
-
+export const Catalogs = ({data, role }: Props) => {
     return (
-        <div className={"grid grid-cols-4 gap-4"}>
-            {data?.map(el => (
+        <div className={"grid sm:grid-cols-4 grid-cols-1 gap-4"}>
+            {data?.map((el: Catalog) => (
                 <div key={el.id} className={"bg-white shadow rounded-2xl p-2 relative"}>
                     <Link href={`/catalog/${el.id}`}>
                         <div className={"h-[223px]"}>
