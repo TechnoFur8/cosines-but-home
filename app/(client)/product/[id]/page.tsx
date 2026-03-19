@@ -40,7 +40,7 @@ export async function generateMetadata(
         'дорожка ковровая'
     ]
 
-    const description = `Ковер "${product.name}" ${product.size}. Производство: ${product.from}. Состав: ${product.compound}. Плотность: ${product.hardness}/10. Цена ${product.price.toLocaleString('ru-RU')} ₽. В наличии на рынке Садовод в Москве. ${product.description}`
+    const description = `Ковер "${product.name}" ${product.size}. ${product.from}. ${product.compound}. Цена ${product.price.toLocaleString('ru-RU')} ₽. Садовод, Москва.`
 
     const title = `Ковер "${product.name}" ${product.size} - Купить на рынке Садовод, Москва`
 

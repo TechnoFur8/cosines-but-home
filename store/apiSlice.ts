@@ -32,6 +32,7 @@ interface Rating {
 }
 
 interface RatingPost {
+    name: string
     ratingStar: number
     description: string
 }
@@ -50,6 +51,7 @@ interface User {
 }
 
 interface Order {
+    name: string
     phone: string
     address: string
     delivery: string

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-const generateToken = () => {
+export const generateToken = () => {
     return Math.random().toString(36).substring(2) + Date.now().toString(36)
 }
 

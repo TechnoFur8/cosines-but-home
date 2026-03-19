@@ -47,6 +47,6 @@ export const CartPost = ({ productId, size }: Props) => {
     }
 
     return (
-        <Button className={"cursor-pointer w-full sm:w-40"} disabled={isLoading} onClick={() => handleClickCartPost(productId, size)}>{isLoading ? <><LoaderCircle className={"animate-spin"} /> Добовляем в корзину </> : "В корзину"}</Button>
+        <Button className={"cursor-pointer w-full sm:w-45"} disabled={isLoading} onClick={() => handleClickCartPost(productId, size)}>{isLoading ? <><LoaderCircle className={"animate-spin"} /> Добовляем в корзину </> : "В корзину"}</Button>
     )
 }

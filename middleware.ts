@@ -6,12 +6,6 @@ export async function middleware(req: NextRequest) {
 
     const { pathname } = req.nextUrl
 
-    const publicPaths = ["/cart", "/favorite", "/profil"]
-
-    if (publicPaths.includes(pathname) && !token) {
-        return NextResponse.rewrite(new URL("/profil/registration", req.url))
-    }
-
     if (pathname.startsWith("/admin-panel")) {
         if (!token) {
             return NextResponse.rewrite(new URL("/404", req.url))

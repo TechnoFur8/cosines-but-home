@@ -1,8 +1,8 @@
-import { verefyToken } from "@/lib/token";
 import { selectedSize } from "@/lib/selected-size";
 import { prisma } from "@/prisma/prisma-client";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { generateToken } from "@/lib/token-cookie";
 
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { id } = await params
     const productId = Number(id)
     const cookieStore = await cookies()
-    const token = cookieStore.get("token")
+    let token = cookieStore.get("sessionId")
 
     try {
         if (!productId) {
@@ -27,28 +27,43 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             return NextResponse.json({ message: "Такого продукта нет" }, { status: 404 })
         }
 
+        // if (!token) {
+        //     return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
+        // }
+
+        // const userToken = await verefyToken(token.value)
+
+        // if (!userToken) {
+        //     return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        // }
+
+        // const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+
+        // if (!user) {
+        //     return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
+        // }
+
         if (!token) {
-            return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
+            const newToken = generateToken()
+
+            cookieStore.set("sessionId", newToken, {
+                maxAge: 365 * 24 * 60 * 60,
+                httpOnly: true,
+                sameSite: "strict",
+                // secure: true,
+                path: "/",
+                domain: "192.168.0.151"
+            })
+
+            token = { name: "sessionId", value: newToken }
         }
 
-        const userToken = await verefyToken(token.value)
-
-        if (!userToken) {
-            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
-        }
-
-        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
-
-        if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
-        }
-
-        let cart = await prisma.cart.findUnique({ where: { userId: user.id } })
+        let cart = await prisma.cart.findUnique({ where: { sessionId: token.value } })
 
         if (!cart) {
             cart = await prisma.cart.create({
                 data: {
-                    userId: user.id
+                    sessionId: token.value
                 }
             })
         }
@@ -86,30 +101,30 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const { id } = await params
     const cartProductId = Number(id)
     const cookieStore = await cookies()
-    const token = cookieStore.get("token")
+    const token = cookieStore.get("sessionId")
 
     if (!cartProductId) {
         return NextResponse.json({ message: "Неверный ID" }, { status: 400 })
     }
 
     try {
-        if (!token) {
-            return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
-        }
+        // if (!token) {
+        //     return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
+        // }
 
-        const userToken = await verefyToken(token.value)
+        // const userToken = await verefyToken(token.value)
 
-        if (!userToken) {
-            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
-        }
+        // if (!userToken) {
+        //     return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        // }
 
-        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+        // const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
-        if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
-        }
+        // if (!user) {
+        //     return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
+        // }
 
-        const cart = await prisma.cart.findUnique({ where: { userId: user.id } })
+        const cart = await prisma.cart.findUnique({ where: { sessionId: token?.value } })
 
         if (!cart) {
             return NextResponse.json({ message: "Корзина не найдена" }, { status: 404 })
@@ -135,30 +150,30 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id } = await params
     const cartProductId = Number(id)
     const cookieStore = await cookies()
-    const token = cookieStore.get("token")
+    const token = cookieStore.get("sessionId")
 
     if (!cartProductId) {
         return NextResponse.json({ message: "Неверный ID" }, { status: 404 })
     }
 
     try {
-        if (!token) {
-            return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
-        }
+        // if (!token) {
+        //     return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
+        // }
 
-        const userToken = await verefyToken(token.value)
+        // const userToken = await verefyToken(token.value)
 
-        if (!userToken) {
-            return NextResponse.json({ message: "Невалидный токен" }, { status: 403 })
-        }
+        // if (!userToken) {
+        //     return NextResponse.json({ message: "Невалидный токен" }, { status: 403 })
+        // }
 
-        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+        // const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
-        if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
-        }
+        // if (!user) {
+        //     return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
+        // }
 
-        const cart = await prisma.cart.findUnique({ where: { userId: user.id } })
+        const cart = await prisma.cart.findUnique({ where: { sessionId: token?.value } })
 
         if (!cart) {
             return NextResponse.json({ message: "Корзина ненайдена" }, { status: 404 })

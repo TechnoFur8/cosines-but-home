@@ -1,4 +1,5 @@
 import { verefyToken } from "@/lib/token";
+import { generateToken } from "@/lib/token-cookie";
 import { prisma } from "@/prisma/prisma-client";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -14,11 +15,11 @@ const transporter = nodemailer.createTransport({
 
 export async function POST(req: NextRequest) {
     const cookieStore = await cookies()
-    const token = cookieStore.get("token")
-    const { phone, address, delivery, pay, policy, email } = await req.json()
+    let token = cookieStore.get("sessionId")
+    const { name, phone, address, delivery, pay, policy, email } = await req.json()
 
     try {
-        if (!phone || !address || !delivery || !pay || !policy || !email) {
+        if (!name || !phone || !address || !delivery || !pay || !policy || !email) {
             return NextResponse.json({ message: "Неверные данные" }, { status: 400 })
         }
 
@@ -26,23 +27,38 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: "Пользователь откланил соглашение" }, { status: 400 })
         }
 
+        // if (!token) {
+        //     return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
+        // }
+
+        // const userToken = await verefyToken(token.value)
+
+        // if (!userToken) {
+        //     return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        // }
+
+        // const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+
+        // if (!user) {
+        //     return NextResponse.json({ message: "Пользователь неайден" }, { status: 401 })
+        // }
+
         if (!token) {
-            return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
+            const newToken = generateToken()
+
+            cookieStore.set("sessionId", newToken, {
+                maxAge: 365 * 24 * 60 * 60,
+                httpOnly: true,
+                sameSite: "strict",
+                // secure: true,
+                path: "/",
+                domain: "192.168.0.151"
+            })
+
+            token = { name: "sessionId", value: newToken }
         }
 
-        const userToken = await verefyToken(token.value)
-
-        if (!userToken) {
-            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
-        }
-
-        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
-
-        if (!user) {
-            return NextResponse.json({ message: "Пользователь неайден" }, { status: 401 })
-        }
-
-        const cart = await prisma.cart.findUnique({ where: { userId: user.id } })
+        const cart = await prisma.cart.findUnique({ where: { sessionId: token.value } })
 
         if (!cart) {
             return NextResponse.json({ message: "Корзина не найдена" }, { status: 404 })
@@ -70,7 +86,7 @@ export async function POST(req: NextRequest) {
 
             const order = await tx.order.create({
                 data: {
-                    name: user.name,
+                    name,
                     email,
                     phone,
                     address,
@@ -78,7 +94,7 @@ export async function POST(req: NextRequest) {
                     pay,
                     policy,
                     total,
-                    userId: user.id,
+                    sessionId: token!.value,
                 }
             })
 
@@ -114,7 +130,7 @@ export async function POST(req: NextRequest) {
                         <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                             <tr>
                                 <td style="padding: 8px 0; width: 120px; vertical-align: top;"><strong style="color: #86868b; font-weight: 500;">Имя:</strong></td>
-                                <td style="padding: 8px 0;">${user.name}</td>
+                                <td style="padding: 8px 0;">${name}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 8px 0;"><strong style="color: #86868b; font-weight: 500;">Телефон:</strong></td>
@@ -187,7 +203,7 @@ export async function POST(req: NextRequest) {
                         <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                             <tr>
                                 <td style="padding: 8px 0; width: 120px; vertical-align: top;"><strong style="color: #86868b; font-weight: 500;">Имя:</strong></td>
-                                <td style="padding: 8px 0;">${user.name}</td>
+                                <td style="padding: 8px 0;">${name}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 8px 0;"><strong style="color: #86868b; font-weight: 500;">Телефон:</strong></td>

@@ -1,10 +1,10 @@
 generator client {
     provider = "prisma-client-js"
+    output   = "../generated/prisma"
 }
 
 datasource db {
     provider = "postgresql"
-    url      = env("DATABASE_URL")
 }
 
 model User {
@@ -14,11 +14,6 @@ model User {
     password String
     role     String @default("USER")
 
-    cart     Cart?
-    favorite Favorite?
-    ratings  Rating[]
-    orders   Order[]
-
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -26,8 +21,7 @@ model User {
 model Cart {
     id Int @id @default(autoincrement())
 
-    user   User? @relation(fields: [userId], references: [id])
-    userId Int?  @unique
+    sessionId String @unique
 
     cartProducts CartProduct[]
 
@@ -38,8 +32,7 @@ model Cart {
 model Favorite {
     id Int @id @default(autoincrement())
 
-    user   User? @relation(fields: [userId], references: [id])
-    userId Int?  @unique
+    sessionId String @unique
 
     favoriteProducts FavoriteProduct[]
 
@@ -137,8 +130,7 @@ model Rating {
     Product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
     productId Int?
 
-    user   User? @relation(fields: [userId], references: [id])
-    userId Int?
+    sessionId String @unique
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -147,19 +139,17 @@ model Rating {
 model Order {
     id Int @id @default(autoincrement())
 
-    name     String
-    email    String
-    address  String
-    phone    String
-    delivery String
-    pay      String
-    policy   Boolean
-    total    Int
+    name      String
+    email     String
+    address   String
+    phone     String
+    delivery  String
+    pay       String
+    policy    Boolean
+    total     Int
+    sessionId String  @unique
 
     orderItems OrderItem[]
-
-    user   User? @relation(fields: [userId], references: [id])
-    userId Int?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

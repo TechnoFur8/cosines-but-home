@@ -6,7 +6,7 @@ async function getCatlog() {
 
 export default function CatalogProductPage() {
     return (
-        <Container className={"my-10"}>
+        <Container>
             <CatalogProducts />
         </Container>
     )

@@ -1,11 +1,12 @@
 import { verefyToken } from "@/lib/token";
+import { generateToken } from "@/lib/token-cookie";
 import { prisma } from "@/prisma/prisma-client";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const cookieStore = await cookies()
-    const token = cookieStore.get("token")
+    let token = cookieStore.get("sessionId")
     const { id } = await params
     const productId = Number(id)
 
@@ -14,20 +15,35 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     try {
+        // if (!token) {
+        //     return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
+        // }
+
+        // const userToken = await verefyToken(token.value)
+
+        // if (!userToken) {
+        //     return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        // }
+
+        // const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+
+        // if (!user) {
+        //     return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+        // }
+
         if (!token) {
-            return NextResponse.json({ message: "Токен не найден" }, { status: 401 })
-        }
+            const newToken = generateToken()
 
-        const userToken = await verefyToken(token.value)
+            cookieStore.set("sessionId", newToken, {
+                maxAge: 365 * 24 * 60 * 60,
+                httpOnly: true,
+                sameSite: "strict",
+                // secure: true,
+                path: "/",
+                domain: "192.168.0.151"
+            })
 
-        if (!userToken) {
-            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
-        }
-
-        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
-
-        if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 404 })
+            token = { name: "sessionId", value: newToken }
         }
 
         const product = await prisma.product.findUnique({ where: { id: productId } })
@@ -36,7 +52,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ message: "Такого продукта нет" }, { status: 404 })
         }
 
-        const rating = await prisma.rating.findFirst({ where: { userId: user.id, productId } })
+        const rating = await prisma.rating.findFirst({ where: { sessionId: token.value, productId } })
 
         return NextResponse.json({ rating }, { status: 200 })
     } catch (err) {
@@ -47,15 +63,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const cookieStore = await cookies()
-    const token = cookieStore.get("token")
+    const token = cookieStore.get("sessionId")
     const { id } = await params
     const myRatingId = Number(id)
-    const { ratingStar, description } = await req.json()
+    const { ratingStar, description, name } = await req.json()
 
 
     try {
         if (!myRatingId) {
             return NextResponse.json({ message: "Неверный ID" }, { status: 400 })
+        }
+
+        if (!name) {
+            return NextResponse.json({ message: "Неверное имя" }, { status: 400 })
         }
 
         if (ratingStar > 5 || ratingStar < 1 || !ratingStar) {
@@ -66,23 +86,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             return NextResponse.json({ message: "Описание слишком длинное" }, { status: 400 })
         }
 
-        if (!token) {
-            return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
-        }
+        // if (!token) {
+        //     return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
+        // }
 
-        const userToken = await verefyToken(token.value)
+        // const userToken = await verefyToken(token.value)
 
-        if (!userToken) {
-            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
-        }
+        // if (!userToken) {
+        //     return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        // }
 
-        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+        // const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
-        if (!user) {
-            return NextResponse.json({ message: "Пользователь неайден" }, { status: 404 })
-        }
+        // if (!user) {
+        //     return NextResponse.json({ message: "Пользователь неайден" }, { status: 404 })
+        // }
 
-        const rating = await prisma.rating.findUnique({ where: { userId: user.id, id: myRatingId } })
+        const rating = await prisma.rating.findUnique({ where: { sessionId: token?.value, id: myRatingId } })
 
         if (!rating) {
             return NextResponse.json({ message: "Рейтинг не найден" }, { status: 404 })
@@ -91,11 +111,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         const updateRating = await prisma.rating.update({
             where: { id: myRatingId },
             data: {
-                name: user.name,
+                name,
                 rating: ratingStar,
                 description,
                 productId: rating.productId,
-                userId: user.id
+                sessionId: token?.value
             }
         })
 
@@ -108,7 +128,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const cookieStore = await cookies()
-    const token = cookieStore.get("token")
+    const token = cookieStore.get("sessionId")
     const { id } = await params
     const ratingId = Number(id)
 
@@ -117,23 +137,23 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
             return NextResponse.json({ message: "Неверный ID" }, { status: 404 })
         }
 
-        if (!token) {
-            return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
-        }
+        // if (!token) {
+        //     return NextResponse.json({ message: "Токен не найден" }, { status: 404 })
+        // }
 
-        const userToken = await verefyToken(token.value)
+        // const userToken = await verefyToken(token.value)
 
-        if (!userToken) {
-            return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
-        }
+        // if (!userToken) {
+        //     return NextResponse.json({ message: "Невалидный токен" }, { status: 401 })
+        // }
 
-        const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
+        // const user = await prisma.user.findUnique({ where: { id: userToken.userId } })
 
-        if (!user) {
-            return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
-        }
+        // if (!user) {
+        //     return NextResponse.json({ message: "Пользователь не найден" }, { status: 401 })
+        // }
 
-        const rating = await prisma.rating.findUnique({ where: { id: ratingId, userId: user.id } })
+        const rating = await prisma.rating.findUnique({ where: { id: ratingId, sessionId: token?.value } })
 
         if (!rating) {
             return NextResponse.json({ message: "Рейтинг не найден" }, { status: 404 })

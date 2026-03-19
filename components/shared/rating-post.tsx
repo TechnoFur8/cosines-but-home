@@ -42,6 +42,7 @@ export const RatingPost = ({ productId }: Props) => {
     }
 
     const formSchema = z.object({
+        name: z.string().min(2, { message: "Имя должно быть не меньше 2 символов" }),
         rating: z.number().min(1, { message: "Рейтинг должен быть больше 1" }).max(5, { message: "Рейтинг должен быть меньше 5" }),
         description: z.string().max(1000, { message: "Описание должно быть меньше 1000 символов" }),
     })
@@ -49,6 +50,7 @@ export const RatingPost = ({ productId }: Props) => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            name: "",
             rating: starNumber,
             description: ""
         }
@@ -56,7 +58,7 @@ export const RatingPost = ({ productId }: Props) => {
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
         try {
-            await postRating({ id: productId, rating: { description: data.description, ratingStar: data.rating } }).unwrap()
+            await postRating({ id: productId, rating: { name: data.name, description: data.description, ratingStar: data.rating } }).unwrap()
             toast.success("Отзыв успешно создан")
             form.reset()
             setStarNumber(0)
@@ -87,6 +89,19 @@ export const RatingPost = ({ productId }: Props) => {
                     />
                     <FormField
                         control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Ваше имя</FormLabel>
+                                <FormControl>
+                                    <Input {...field} placeholder="Ваше имя" type="text" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
                         name="description"
                         render={({ field }) => (
                             <FormItem>
@@ -94,7 +109,7 @@ export const RatingPost = ({ productId }: Props) => {
                                 <FormControl>
                                     <div>
                                         <Textarea {...field} placeholder="Оставьте свой отзыв" className={"h-30 resize-none"} />
-                                        <span className={field.value.length > 1000 ? "text-red-500" : ""}>{field.value.length}/1000</span>
+                                        <span className={(field.value?.length ?? 0) > 1000 ? "text-red-500" : ""}>{field.value?.length || 0}/1000</span>
                                     </div>
                                 </FormControl>
                                 <FormMessage />

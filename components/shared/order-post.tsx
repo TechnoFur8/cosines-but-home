@@ -23,6 +23,7 @@ export const OrderPost = ({ refetch }: Props) => {
     const [postOrder, { isLoading }] = usePostOrderMutation()
 
     const formSchema = z.object({
+        name: z.string().min(2, "Имя слишком короткое"),
         email: z.string().min(2, "Короткий email").email(),
         phone: z.string().min(18, "Короткий номер"),
         address: z.string().min(2, "Короткий адрес"),
@@ -34,6 +35,7 @@ export const OrderPost = ({ refetch }: Props) => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            name: "",
             email: "",
             phone: "",
             address: "",
@@ -46,6 +48,7 @@ export const OrderPost = ({ refetch }: Props) => {
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
         try {
             await postOrder({
+                name: data.name,
                 email: data.email,
                 phone: data.phone,
                 address: data.address,
@@ -53,7 +56,7 @@ export const OrderPost = ({ refetch }: Props) => {
                 pay: data.pay,
                 policy: data.policy
             }).unwrap()
-            await refetch()
+            refetch()
             toast.success("Спасибо за заказ! Проверьте почту", { icon: "😊" })
         } catch (err) {
             console.error(err)
@@ -66,6 +69,19 @@ export const OrderPost = ({ refetch }: Props) => {
             <div className={"sm:block hidden"}>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Имя</FormLabel>
+                                    <FormControl>
+                                        <Input {...field} placeholder="Введите ваше имя" type="text" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                         <FormField
                             control={form.control}
                             name="email"
@@ -201,21 +217,34 @@ export const OrderPost = ({ refetch }: Props) => {
                                 </FormItem>
                             )}
                         />
-                        <Button disabled={isLoading} className={"w-full"} type="submit">{isLoading ? <><LoaderCircle className={"animate-spin"} /> Создаем заказ</> : "Создать заказ"}</Button>
+                        <Button disabled={isLoading} className={"w-full"} type="submit">{isLoading ? <><LoaderCircle className={"animate-spin"} /> Оформляем заказ</> : "Оформить заказ"}</Button>
                     </form>
                 </Form>
             </div>
             <Dialog>
                 <DialogTrigger className={"block sm:hidden w-full"} asChild>
-                    <Button className={"w-full"}>Создать заказ</Button>
+                    <Button className={"w-full"}>Оформить заказ</Button>
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Создать заказ</DialogTitle>
+                        <DialogTitle>Оформить заказ</DialogTitle>
                         <DialogDescription>Чек о создании заказа будет отправлен на вашу почту. Если не найдете письмо во «Входящих», проверьте папку «Спам».</DialogDescription>
                     </DialogHeader>
                     <Form {...form}>
                         <form className={"space-y-2"} onSubmit={form.handleSubmit(onSubmit)}>
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Имя</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} placeholder="Введите ваше имя" type="text" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                             <FormField
                                 control={form.control}
                                 name="email"
@@ -299,7 +328,7 @@ export const OrderPost = ({ refetch }: Props) => {
                                 name="pay"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-medium block mb-3">Способ доставки</FormLabel>
+                                        <FormLabel className="text-sm font-medium block mb-3">Способ оплаты</FormLabel>
                                         <FormControl>
                                             <RadioGroup
                                                 className="flex flex-col"
@@ -352,7 +381,7 @@ export const OrderPost = ({ refetch }: Props) => {
                                 )}
                             />
                             <DialogFooter>
-                                <Button disabled={isLoading} type="submit">{isLoading ? <><LoaderCircle className={"animate-spin"} /> Создаем заказ</> : "Создать заказ"}</Button>
+                                <Button disabled={isLoading} type="submit">{isLoading ? <><LoaderCircle className={"animate-spin"} /> Оформляем заказ</> : "Оформить заказ"}</Button>
                                 <DialogClose asChild>
                                     <Button variant={"secondary"}>Закрыть</Button>
                                 </DialogClose>

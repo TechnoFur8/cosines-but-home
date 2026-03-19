@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  name     String
+  password String
+  role     String @default("USER")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cart {
+  id Int @id @default(autoincrement())
+
+  sessionId String @unique
+
+  cartProducts CartProduct[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Favorite {
+  id Int @id @default(autoincrement())
+
+  sessionId String @unique
+
+  favoriteProducts FavoriteProduct[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartProduct {
+  id Int @id @default(autoincrement())
+
+  img       String
+  name      String
+  quantity  Int    @default(1)
+  price     Int
+  discount  Int
+  size      String
+  productId Int
+
+  cart   Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cartId Int
+
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FavoriteProduct {
+  id Int @id @default(autoincrement())
+
+  img       String
+  name      String
+  price     Int
+  discount  Int
+  size      String
+  productId Int
+
+  favorite   Favorite @relation(fields: [favoriteId], references: [id], onDelete: Cascade)
+  favoriteId Int
+
+  product Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+
+  img         String[]
+  name        String
+  price       Int
+  discount    Int
+  compound    String
+  warp        String
+  hight       Int
+  hardness    Int
+  size        String
+  description String
+  from        String
+  totalBought Int      @default(0)
+
+  rating     Rating[]
+  orderItems OrderItem[]
+
+  Catalog   Catalog? @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+  catalogId Int?
+
+  cartProducts     CartProduct[]
+  favoriteProducts FavoriteProduct[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Catalog {
+  id Int @id @default(autoincrement())
+
+  img  String
+  name String
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Rating {
+  id Int @id @default(autoincrement())
+
+  name        String
+  rating      Int
+  description String
+
+  Product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int?
+
+  sessionId String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id Int @id @default(autoincrement())
+
+  name      String
+  email     String
+  address   String
+  phone     String
+  delivery  String
+  pay       String
+  policy    Boolean
+  total     Int
+  sessionId String  @unique
+
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id Int @id @default(autoincrement())
+
+  quantity    Int
+  productName String
+  price       Int
+  size        String
+
+  order   Order? @relation(fields: [orderId], references: [id])
+  orderId Int?
+
+  product   Product? @relation(fields: [productId], references: [id])
+  productId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -10,16 +10,8 @@ import Link from "next/link"
 import { Heart } from "lucide-react"
 
 export const Favorite = () => {
-    const { data, isLoading, isError, error } = useGetFavoriteQuery()
+    const { data, isLoading, isError } = useGetFavoriteQuery()
     const router = useRouter()
-
-    useEffect(() => {
-        if (error) {
-            if ("status" in error && error.status === 401) {
-                return router.push("/profil/registration")
-            }
-        }
-    }, [error])
 
     if (isLoading) return (
         <div className="flex items-center justify-center p-8 sm:p-12">
@@ -103,7 +95,7 @@ export const Favorite = () => {
                             />
                         </div>
                         <div className="flex-1 sm:flex-none">
-                            <FavoriteDelete id={el.productId} />
+                            <FavoriteDelete id={el.id} />
                         </div>
                     </div>
                 </div>

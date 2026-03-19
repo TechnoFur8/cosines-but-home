@@ -10,16 +10,7 @@ import { useRouter } from "next/navigation"
 import { OrderPost } from "./order-post"
 
 export const Cart = () => {
-    const { data, isLoading, isError, error, refetch } = useGetCartQuery()
-    const router = useRouter()
-
-    useEffect(() => {
-        if (error) {
-            if ("status" in error && error.status === 401) {
-                return router.push("/profil/registration")
-            }
-        }
-    }, [error])
+    const { data, isLoading, isError, refetch } = useGetCartQuery()
 
     if (isLoading) return <h1>Loading...</h1>
     if (isError) return <h1>Error</h1>
